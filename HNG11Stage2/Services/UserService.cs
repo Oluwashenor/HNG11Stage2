@@ -53,10 +53,10 @@ namespace HNG11Stage2.Services
             var user = await userManager.FindByEmailAsync(model.Email.Trim().ToLower());
             var createdOrganization = await organizationService.CreateOrganization(new CreateOrganizationDTO()
             {
-                Name = model.FirstName + "'s Organization",
+                Name = model.FirstName + "'s Organisation",
                 Description = ""
             }, user.Id);
-            if (createdOrganization.StatusCode != 201) return ResponseModel<RegistrationResponseDTO>.Error("Unable to create your organization");
+            if (createdOrganization.StatusCode != 201) return ResponseModel<RegistrationResponseDTO>.Error("Unable to create your organisation");
             var token = await GenerateToken(user);
             var response = MapData(user, token);
             return ResponseModel<RegistrationResponseDTO>.Success(response, "Registration successful", statusCode: 201);
@@ -88,6 +88,44 @@ namespace HNG11Stage2.Services
             var token = await GenerateToken(user);
             var response = MapData(user, token);
             return ResponseModel<RegistrationResponseDTO>.Success(response, "Login successful");
+        }
+
+       
+        public async Task<ResponseModel<UserDTO>> GetUser(string userId, string requestUser)
+        {
+            var requester = await userManager.FindByIdAsync(requestUser);
+            if (requester == null) return ResponseModel<UserDTO>.Error("Unauthorized user");
+            if(userId == requestUser)
+            {
+                var data =new UserDTO()
+                {
+                    Email = requester.Email,
+                    FirstName = requester.Name.Split(" ")[0],
+                    LastName = requester.Name.Split(" ")[1],
+                    UserId = requester.Id,
+                    Phone = requester.PhoneNumber
+                };
+                ResponseModel<UserDTO>.Success(data, "successful operation");
+            }
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null) return ResponseModel<UserDTO>.Error("Account not found");
+            var requesterOrganizations = await context.UserOrganizations.Where(x => x.UserId == requestUser).Select(x=>x.OrganizationId).ToListAsync();
+            var userInRequesterOrg = await context.UserOrganizations.FirstOrDefaultAsync(x => requesterOrganizations.Contains(x.OrganizationId) && x.UserId == user.Id);
+            if(userInRequesterOrg != null)
+            {
+                var response = new UserDTO()
+                {
+                    Email = user.Email,
+                    FirstName = user.Name.Split(" ")[0],
+                    LastName = user.Name.Split(" ")[1],
+                    UserId = user.Id,
+                    Phone = user.PhoneNumber
+                };
+                return ResponseModel<UserDTO>.Success(response, "successful operation");
+            }
+           
+
+          return ResponseModel<UserDTO>.Error("Account not found");
         }
 
         private async Task<string> GenerateToken(User user)
@@ -122,5 +160,6 @@ namespace HNG11Stage2.Services
     {
         Task<ResponseModel<RegistrationResponseDTO>> CreateUser(CreateUserDTO model);
         Task<ResponseModel<RegistrationResponseDTO>> Login(LoginDTO model);
+        Task<ResponseModel<UserDTO>> GetUser(string user, string requestUser);
     }
 }

@@ -22,5 +22,14 @@ namespace HNG11Stage2.Controllers
             var login = await userService.Login(model);
             return StatusCode(login.StatusCode, login);
         }
+
+        [HttpGet("/api/users/{user}")]
+        public async Task<IActionResult> GetUser(string user)
+        {
+            string request = HttpContext.User.Claims?.FirstOrDefault(x => x.Type == "userId")?.Value;
+            if(request == null) return Unauthorized();
+            var login = await userService.GetUser(user, request);
+            return StatusCode(login.StatusCode, login);
+        }
     }
 }

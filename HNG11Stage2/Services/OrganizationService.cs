@@ -57,10 +57,10 @@ namespace HNG11Stage2.Services
         public async Task<ResponseModel<bool>> AddToOrg(string userId, string orgId, string adderId)
         {
             var organization = await context.Organizations.FirstOrDefaultAsync(x => x.Id == orgId);
-            if (organization == default) return ResponseModel<bool>.Error("Organization not found");
-            if (organization.CreatedBy != adderId) return ResponseModel<bool>.Error("You are unauthorized to add users to this organization");
+            if (organization == default) return ResponseModel<bool>.Error("Organisation not found");
+            if (organization.CreatedBy != adderId) return ResponseModel<bool>.Error("You are unauthorized to add users to this organisation");
             var userPresentInOrg =  await context.UserOrganizations.FirstOrDefaultAsync(x => x.UserId == userId && x.OrganizationId == orgId);
-            if (userPresentInOrg != default) return ResponseModel<bool>.Error("User already belong to organization");
+            if (userPresentInOrg != default) return ResponseModel<bool>.Error("User already belong to organisation");
              await context.UserOrganizations.AddAsync(new()
             {
                 OrganizationId = organization.Id,
