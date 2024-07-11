@@ -81,6 +81,19 @@ namespace HNG11Stage2.Services
 
         public async Task<ResponseModel<RegistrationResponseDTO>> Login(LoginDTO model)
         {
+            Dictionary<string, string> errors = new();
+            if (string.IsNullOrEmpty(model.Password))
+            {
+                errors.Add("password", "This field is required");
+            }
+            if (string.IsNullOrEmpty(model.Email))
+            {
+                errors.Add("email", "This field is required");
+            }
+            if (errors.Count > 0)
+            {
+                return ResponseModel<RegistrationResponseDTO>.MultiError(errors = errors, statusCode: 422);
+            }
             var user = await userManager.FindByEmailAsync(model.Email);
             if (user == null) return ResponseModel<RegistrationResponseDTO>.Error("Account not found");
             var signIn = await signInManager.CheckPasswordSignInAsync(user, model.Password, false);
