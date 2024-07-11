@@ -17,14 +17,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-var connectionString = builder.Configuration.GetConnectionString("Remote");
+var connectionString = builder.Configuration.GetConnectionString("Development");
 builder.Services.AddDbContext<AppDBContext>(options =>
 options.UseNpgsql(connectionString));
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
-builder.Services.AddIdentityCore<User>()
+builder.Services.AddIdentityCore<User>( options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 2;
+    options.Password.RequiredUniqueChars = 0;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireDigit = false;
+})
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AppDBContext>();
 

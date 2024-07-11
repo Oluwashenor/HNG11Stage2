@@ -15,10 +15,10 @@
 
         public static ResponseModel<T> Error(string message = null,int statusCode = 400)
         {
-            return new ResponseModel<T> { Message = message ?? "Something went wrong", Status = "Bad Request", StatusCode = 400 };
+            return new ResponseModel<T> { Message = message ?? "Something went wrong", Status = "Bad request", StatusCode = statusCode };
         }
 
-        public static ResponseModel<T> MultiError(Dictionary<string, string> errors = null, int statusCode = 400)
+        public static ResponseModel<T> MultiError(Dictionary<string, string> errors = null, string message = "Something went wrong", string status = "failed" ,int statusCode = 400)
         {
             var modifiedErrors = new List<dynamic>();   
             foreach (var item in errors)
@@ -29,7 +29,7 @@
                     message = item.Value,
                 });
             }
-            return new ResponseModel<T> { Errors = modifiedErrors, Status = "failed", StatusCode = statusCode };
+            return new ResponseModel<T> { Errors = modifiedErrors, Status = status, StatusCode = statusCode, Message = message };
         }
     }
 

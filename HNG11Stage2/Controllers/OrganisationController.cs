@@ -11,7 +11,7 @@ namespace HNG11Stage2.Controllers
     public class OrganisationController(IOrganizationService organizationService) : ControllerBase
     {
         [HttpPost("/api/organisations")]
-        public async Task<IActionResult> CreateOrganization([FromBody] CreateOrganizationDTO model)
+        public async Task<IActionResult> CreateOrganization(CreateOrganizationDTO? model)
         {
             string user = HttpContext.User.Claims?.FirstOrDefault(x => x.Type == "userId")?.Value;
             if (user == null) return Unauthorized();

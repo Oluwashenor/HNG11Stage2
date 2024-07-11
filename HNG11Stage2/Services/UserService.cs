@@ -38,6 +38,7 @@ namespace HNG11Stage2.Services
             {
                 return ResponseModel<RegistrationResponseDTO>.MultiError(errors = errors, statusCode: 422);
             }
+
             
             var newUser = new User
             {
@@ -47,14 +48,18 @@ namespace HNG11Stage2.Services
                 PhoneNumber = model.Phone
             };
             var emailExist = await userManager.FindByEmailAsync(newUser.Email);
-            if (emailExist != null) return ResponseModel<RegistrationResponseDTO>.Error("Email Address Already Exist. Please Proceed to Login");
+            if (emailExist != null)
+            {
+                errors.Add("email", "email is taken");
+                return ResponseModel<RegistrationResponseDTO>.MultiError(errors = errors, statusCode: 422);
+            }
             var createUser = await userManager.CreateAsync(newUser, model.Password);
             if (!createUser.Succeeded) return ResponseModel<RegistrationResponseDTO>.Error("Registration unsuccessful");
             var user = await userManager.FindByEmailAsync(model.Email.Trim().ToLower());
             var createdOrganization = await organizationService.CreateOrganization(new CreateOrganizationDTO()
             {
                 Name = model.FirstName + "'s Organisation",
-                Description = ""
+                Description = "Sample"
             }, user.Id);
             if (createdOrganization.StatusCode != 201) return ResponseModel<RegistrationResponseDTO>.Error("Unable to create your organisation");
             var token = await GenerateToken(user);
@@ -95,7 +100,7 @@ namespace HNG11Stage2.Services
                 return ResponseModel<RegistrationResponseDTO>.MultiError(errors = errors, statusCode: 422);
             }
             var user = await userManager.FindByEmailAsync(model.Email);
-            if (user == null) return ResponseModel<RegistrationResponseDTO>.Error("Account not found");
+            if (user == null) return ResponseModel<RegistrationResponseDTO>.Error("Authentication failed", statusCode:401);
             var signIn = await signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!signIn.Succeeded) return ResponseModel<RegistrationResponseDTO>.Error("Authentication failed", statusCode: 401);
             var token = await GenerateToken(user);

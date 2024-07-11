@@ -16,7 +16,7 @@ namespace HNG11Stage2.Services
             }
             if (errors.Count > 0)
             {
-                return ResponseModel<OrganizationDTO>.MultiError(errors = errors, statusCode: 422);
+                return ResponseModel<OrganizationDTO>.MultiError(errors = errors, statusCode: 400, message: "Client error", status: "Bad Request");
             }
             var findSimilarOrg = await context.Organizations.FirstOrDefaultAsync(x => x.Name == model.Name);
             var organization = new Organization()
@@ -42,16 +42,16 @@ namespace HNG11Stage2.Services
             return ResponseModel<OrganizationDTO>.Success(response, statusCode: 201, message: "Organisation created successfully");
         }
 
-        public async Task<ResponseModel<List<OrganizationDTO>>> GetOrganization(string userId)
+        public async Task<ResponseModel<OrganizationDTO>> GetOrganization(string userId,string orgId)
         {
-            var userOrganizations = await context.UserOrganizations.Where(x => x.UserId == userId).Include(x=>x.Organization).ToListAsync();
-            var organizations = userOrganizations.Select(x => new OrganizationDTO()
+            var x = await context.UserOrganizations.Where(x => x.UserId == userId && x.OrganizationId == orgId).Include(x => x.Organization).FirstOrDefaultAsync();
+            var organization = new OrganizationDTO()
             {
                 Description = x.Organization.Description,
                 Name = x.Organization.Name,
                 OrgId = x.Organization.Id
-            }).ToList();
-            return ResponseModel<List<OrganizationDTO>>.Success(organizations);    
+            };
+            return ResponseModel<OrganizationDTO>.Success(organization);    
         }
 
         public async Task<ResponseModel<bool>> AddToOrg(string userId, string orgId, string adderId)
@@ -71,16 +71,20 @@ namespace HNG11Stage2.Services
             return ResponseModel<bool>.Success(true, message: "User added to organisation successfully");
         }
 
-        public async Task<ResponseModel<List<OrganizationDTO>>> GetOrganization(string userId, string orgId)
+        public async Task<ResponseModel<OrganizationsDTO>> GetOrganization(string userId)
         {
-            var userOrganizations = await context.UserOrganizations.Where(x => x.UserId == userId && x.OrganizationId == orgId).Include(x => x.Organization).ToListAsync();
-            var organizations = userOrganizations.Select(x => new OrganizationDTO()
+            var x = await context.UserOrganizations.Where(x => x.UserId == userId).Include(x => x.Organization).ToListAsync();
+            var organizations = x.Select(xy => new OrganizationDTO()
             {
-                Description = x.Organization.Description,
-                Name = x.Organization.Name,
-                OrgId = x.Organization.Id
+                Description = xy.Organization.Description,
+                Name = xy.Organization.Name,
+                OrgId = xy.Organization.Id
             }).ToList();
-            return ResponseModel<List<OrganizationDTO>>.Success(organizations);
+            var model = new OrganizationsDTO()
+            {
+                Organisations = organizations
+            };
+            return ResponseModel<OrganizationsDTO>.Success(model);
         }
     }
 
@@ -88,7 +92,7 @@ namespace HNG11Stage2.Services
     {
         Task<ResponseModel<bool>> AddToOrg(string userId, string orgId, string adderId);
         Task<ResponseModel<OrganizationDTO>> CreateOrganization(CreateOrganizationDTO model, string userId);
-        Task<ResponseModel<List<OrganizationDTO>>> GetOrganization(string userId);
-        Task<ResponseModel<List<OrganizationDTO>>> GetOrganization(string userId, string orgId);
+        Task<ResponseModel<OrganizationsDTO>> GetOrganization(string userId);
+        Task<ResponseModel<OrganizationDTO>> GetOrganization(string userId, string orgId);
     }
 }
